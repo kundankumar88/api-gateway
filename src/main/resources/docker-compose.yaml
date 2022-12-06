@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+
+ naming-server:
+  image: kundandockerimage/mss-naming-server:0.0.1-SNAPSHOT
+  mem_limit: 700m
+  ports:
+    - "8761:8761"
+
+ currency-exchange:
+  image: kundandockerimage/mss-currency-exchange-service:0.0.1-SNAPSHOT
+  mem_limit: 700m
+  ports:
+   - "8000:8000"
+  depends_on:
+   - naming-server
+  environment:
+    EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+    SPRING.ZIPKIN.BASEURL: http://zipkin-server:9411/
+
+ currency-conversion:
+   image: docker.io/kundandockerimage/mss-currency-conversion-service:0.0.1-SNAPSHOT
+   mem_limit: 700m
+   ports:
+    - "8100:8100"
+   depends_on:
+     - naming-server
+   environment:
+     EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+     SPRING.ZIPKIN.BASEURL: http://zipkin-server:9411/
+
+
+
+ api-gateway:
+   image: docker.io/kundandockerimage/mss-apigateway:0.0.1-SNAPSHOT
+   mem_limit: 700m
+   ports:
+     - "8765:8765"
+   depends_on:
+     - naming-server
+   environment:
+     EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+     SPRING.ZIPKIN.BASEURL: http://zipkin-server:9411/
+
+ zipkin-server:
+   image: openzipkin/zipkin:2.23
+   mem_limit: 300m
+   ports:
+     - "9411:9411"
